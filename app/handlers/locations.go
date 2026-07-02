@@ -12,7 +12,7 @@ type LocationHandler struct {
 }
 
 func (h *LocationHandler) Register(mux *http.ServeMux) {
-	mux.HandleFunc("/location", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/location", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			h.GetLocations(w, r)
@@ -23,9 +23,10 @@ func (h *LocationHandler) Register(mux *http.ServeMux) {
 		default:
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		}
+		return
 	})
 
-	mux.HandleFunc("/location/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/location/", func(w http.ResponseWriter, r *http.Request) {
 		// handle nested route
 		if strings.HasSuffix(r.URL.Path, "/products") {
 			switch r.Method {
@@ -49,7 +50,7 @@ func (h *LocationHandler) Register(mux *http.ServeMux) {
 
 func (h *LocationHandler) GetProductsByLocation(w http.ResponseWriter, r *http.Request) {
 	path := strings.TrimSuffix(r.URL.Path, "/products")
-	id, err := parseID(path, "/locations/")
+	id, err := parseID(path, "/api/location/")
 	if err != nil {
 		writeError(w, http.StatusBadRequest,
 			"invalid location id", err,
@@ -77,7 +78,7 @@ func (h *LocationHandler) DeleteLocations(w http.ResponseWriter, r *http.Request
 
 func (h *LocationHandler) DeleteLocation(w http.ResponseWriter, r *http.Request) {
 	// extract id from URL e.g. /locations/1
-	id, err := parseID(r.URL.Path, "/location/")
+	id, err := parseID(r.URL.Path, "/api/location/")
 	if err != nil {
 		writeError(w, http.StatusBadRequest,
 			"invalid location id", err)
@@ -91,6 +92,7 @@ func (h *LocationHandler) DeleteLocation(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent) // 204 -- success, nothing to return
+
 }
 
 func (h *LocationHandler) GetLocations(w http.ResponseWriter, r *http.Request) {
@@ -105,7 +107,7 @@ func (h *LocationHandler) GetLocations(w http.ResponseWriter, r *http.Request) {
 
 func (h *LocationHandler) GetLocation(w http.ResponseWriter, r *http.Request) {
 	// extract id from url (/locations/1)
-	id, err := parseID(r.URL.Path, "/location/")
+	id, err := parseID(r.URL.Path, "/api/location/")
 	if err != nil {
 		writeError(w, http.StatusBadRequest,
 			"invalid location id", err)
@@ -125,14 +127,13 @@ func (h *LocationHandler) GetLocation(w http.ResponseWriter, r *http.Request) {
 func (h *LocationHandler) CreateLocation(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Name string `json:"name"`
-		Type string `json:"type"`
 	}
 	if err := decodeBody(r, &body); err != nil {
 		writeError(w, http.StatusBadRequest,
 			"invalid request body", err)
 		return
 	}
-	location, err := h.Service.CreateLocation(body.Name, body.Type)
+	location, err := h.Service.CreateLocation(body.Name)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError,
 			"failed to create location", err)

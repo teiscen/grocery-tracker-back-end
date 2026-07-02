@@ -14,7 +14,7 @@ type ProductHandler struct {
 }
 
 func (h *ProductHandler) Register(mux *http.ServeMux) {
-	mux.HandleFunc("/product", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/product", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:	h.GetProducts(w, r)
 		case http.MethodPost:	h.CreateProduct(w, r)
@@ -24,7 +24,7 @@ func (h *ProductHandler) Register(mux *http.ServeMux) {
 		}		
 	})
 
-	mux.HandleFunc("/product/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/product/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet: 	h.GetProduct(w, r)
 		case http.MethodDelete: h.DeleteProduct(w, r)
@@ -61,9 +61,47 @@ func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }	
 
-func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
-	products, err := h.Service.GetProducts()
+func (h *ProductHandler) getProductByBarcode(w http.ResponseWriter, r *http.Request, string barcode) {
+	product, err := h.Service.GetProductByBarcode(barcode)
 	if err != nil {
+		writeError(w, http.StatusInternalServerError, "barcode lookup failed", err)
+		return 
+	}
+	if product == nil {
+		// Not found
+		writeJson(w, http.StatusNotFound, map[string]string{"message": "product not found"})
+		return
+	}
+	writeJson(w, http.StatusOK, product)
+	return
+}
+
+func (h *ProductHandler) getProductBySearch(search string) () {
+	products, err := h.Service.SearchProducts(search)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "search failed", err)
+		return 
+	}	
+	writeJson(w, http.StatusOK, products)
+	return
+}
+
+func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
+	barcode := r.URL.Query().Get("barcode")
+	search := r.URL.Query().get("search")
+
+	if barcode != "" {
+		h.getProductByBarcode(w, r, barcode)
+		return
+	}
+
+	if search != "" {
+		h.getProductBySearch(w, r, search)
+		return 
+	}
+
+	products, err := h.Service.GetProducts()
+	if err != nil { 
 		writeError(w, http.StatusInternalServerError,
 					"get products error", err)
 		return

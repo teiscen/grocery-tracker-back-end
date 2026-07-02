@@ -29,10 +29,14 @@ func main() {
 	productService  := &services.ProductServices{
 		DB: db,
 	}
+	inventoryService := &services.InventoryService{
+		DB: db,
+	}
 	// Initialize Handlers with resource pattern
 	mux := registerRoutes([]handlers.Registerable{
 		&handlers.LocationHandler{	Service: locationService},
 		&handlers.ProductHandler{	Service: productService},
+		&handlers.InventoryHandler{ Service: inventoryService},
 	})
 
 	fmt.Println("starting server on port 8000...")

@@ -11,20 +11,25 @@ type LocationServices struct {
 type Location struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
-	Type string `json:"type"`
 }
 
 func (s *LocationServices) GetProductsByLocation(id int) ([]Product, error) {
-	rows, err := s.DB.Query(
-		"SELECT id, name FROM products WHERE location_id = $1", id)
-	if err != nil { return nil, err }
+	rows, err := s.DB.Query("
+		SELECT p.id, p.name, p.category, p.barcode 
+		FROM products p
+		WHERE i.location_id = $1",
+		id
+	)
+	if err != nil {
+		return nil, err 
+	}
 	defer rows.Close()
 	
 	products := make([]Product, 0)
 
 	for rows.Next() {
 		var prod Product
-		if err := rows.Scan(&prod.ID, &prod.Name); err != nil {
+		if err := rows.Scan(&prod.ID, &prod.Name, &prod.Category, &prod.Barcode); err != nil {
 			return nil, err
 		}
 		products = append(products, prod)
@@ -44,7 +49,7 @@ func (s *LocationServices) DeleteLocation(id int) error {
 func (s *LocationServices) GetLocations() ([]Location, error) {
 	// Cursor pointing to results (doesnt alloc mem)
 	// Effectively just a cursor, also a stream connection--whatever that means. 
-	rows, err := s.DB.Query("SELECT id, name, type FROM locations")
+	rows, err := s.DB.Query("SELECT id, name FROM locations")
 	if err != nil { return nil, err }
 	defer rows.Close()
 
@@ -54,7 +59,7 @@ func (s *LocationServices) GetLocations() ([]Location, error) {
 
 	for rows.Next() {
 		var loc Location
-		if err := rows.Scan(&loc.ID, &loc.Name, &loc.Type); err != nil {
+		if err := rows.Scan(&loc.ID, &loc.Name); err != nil {
 			return nil, err
 		}
 		locations = append(locations, loc)
@@ -65,9 +70,9 @@ func (s *LocationServices) GetLocations() ([]Location, error) {
 func (s *LocationServices) GetLocation(id int) (*Location, error) {
 	var loc Location
 	err := s.DB.GetByID(
-		"SELECT id, name, type FROM locations WHERE id = $1",
+		"SELECT id, name FROM locations WHERE id = $1",
 		id,
-		&loc.ID, &loc.Name, &loc.Type,
+		&loc.ID, &loc.Name, 
 	)
 	if err != nil { 
 		return nil, err
@@ -77,13 +82,13 @@ func (s *LocationServices) GetLocation(id int) (*Location, error) {
 
 func (s *LocationServices) CreateLocation(name string, locType string) (*Location, error) {
 	id, err := s.DB.InsertReturningID(
-		"INSERT INTO locations (name, type) VALUES ($1, $2) RETURNING id",
-		name, locType,
+		"INSERT INTO locations (name) VALUES ($1) RETURNING id",
+		name,
 	)
 	if err != nil { 
 		return nil, err 
 	}
-	return &Location{ID: id, Name: name, Type: locType}, nil
+	return &Location{ID: id, Name: name}, nil
 }
 
 // ----> Examples/Refrences <----
