@@ -80,7 +80,7 @@ func (s *LocationServices) GetLocation(id int) (*Location, error) {
 	return &loc, nil
 }
 
-func (s *LocationServices) CreateLocation(name string, locType string) (*Location, error) {
+func (s *LocationServices) CreateLocation(name string) (*Location, error) {
 	id, err := s.DB.InsertReturningID(
 		"INSERT INTO locations (name) VALUES ($1) RETURNING id",
 		name,

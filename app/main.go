@@ -29,7 +29,7 @@ func main() {
 	productService  := &services.ProductServices{
 		DB: db,
 	}
-	inventoryService := &services.InventoryService{
+	inventoryService := &services.InventoryServices{
 		DB: db,
 	}
 	// Initialize Handlers with resource pattern

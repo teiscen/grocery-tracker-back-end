@@ -2,6 +2,7 @@ package handlers
 
 import(
 	"net/http"
+	"strconv"
 	"receiptTracker/services"
 )
 
@@ -17,11 +18,11 @@ func (h *InventoryHandler) Register(mux *http.ServeMux) {
 		case http.MethodPost:
 			h.CreateInventoryItem(w, r)
 		default:
-			http.Error(w, "Method nto allowed", http.StatusMethodNotAllowed)
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
 
-	mux.HandleFunc("/api/inventory", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/inventory/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method{
 		case http.MethodGet:
 			h.GetInventoryItem(w, r)
@@ -48,6 +49,28 @@ func (h *InventoryHandler) GetInventoryItem(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	writeJson(w, http.StatusOK, item)
+}
+
+// GET /api/inventory?locationId=1
+// locationId is optional, without it return all inventory
+func (h *InventoryHandler) GetInventory(w http.ResponseWriter, r *http.Request) {
+	var locationID *int
+
+	if idStr := r.URL.Query().Get("locationId"); idStr != "" {
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "invalid locationId", err)
+			return
+		}
+		locationID = &id
+	}
+
+	items, err := h.Service.GetInventory(locationID)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid locationId", err)
+		return 
+	}
+	writeJson(w, http.StatusOK, items)
 }
 
 // POST /api/inventory
@@ -116,7 +139,7 @@ func (h *InventoryHandler) UpdateInventoryItem(w http.ResponseWriter, r *http.Re
 func (h *InventoryHandler) DeleteInventoryItem(w http.ResponseWriter, r *http.Request) {
 	id, err := parseID(r.URL.Path, "/api/inventory/")
 	if err != nil {
-		writeerror(w, http.statusbadrequest, "invalid inventory id", err)
+		writeError(w, http.StatusBadRequest, "invalid inventory id", err)
 		return
 	}
 	err = h.Service.DeleteInventoryItem(id)

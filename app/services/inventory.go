@@ -64,7 +64,6 @@ const baseInventoryQuery = `
 	JOIN products  p ON i.product_id  = p.id
 	JOIN locations l ON i.location_id = l.id`
 
-
 func (s *InventoryServices) GetInventory(locationID *int) ([]InventoryItem, error) {
 	query := baseInventoryQuery 
 
@@ -155,4 +154,46 @@ func (s *InventoryServices) CreateInventoryItem(
 	}
 	return s.GetInventoryItem(id)
 }
+
+func (s *InventoryServices) UpdateInventoryItem(
+	id int,
+	locationID int, 
+	quantity float64,
+	unit string, 
+	expiryDate *string,
+	opened bool,
+) (*InventoryItem, error) {
+	_, err := s.DB.Exec(`
+		UPDATE inventory
+		SET location_id = $1, quantity = $2, unit = $3, expiry_date = $4, opened = $5
+		WHERE id = $6`,
+		locationID, quantity, unit, expiryDate, opened, id, 
+	)
+	if err != nil {
+		return nil, err	
+	}
+	return s.GetInventoryItem(id)
+}
+
+func (s *InventoryServices) DeleteInventoryItem(id int) error {
+	return s.DB.DeleteByID("DELETE FROM inventory WHERE id = $1", id)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

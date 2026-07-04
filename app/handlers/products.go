@@ -61,7 +61,7 @@ func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }	
 
-func (h *ProductHandler) getProductByBarcode(w http.ResponseWriter, r *http.Request, string barcode) {
+func (h *ProductHandler) getProductByBarcode(w http.ResponseWriter, r *http.Request, barcode string) {
 	product, err := h.Service.GetProductByBarcode(barcode)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "barcode lookup failed", err)
@@ -76,7 +76,7 @@ func (h *ProductHandler) getProductByBarcode(w http.ResponseWriter, r *http.Requ
 	return
 }
 
-func (h *ProductHandler) getProductBySearch(search string) () {
+func (h *ProductHandler) getProductBySearch(w http.ResponseWriter, r *http.Request, search string) () {
 	products, err := h.Service.SearchProducts(search)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "search failed", err)
@@ -88,7 +88,7 @@ func (h *ProductHandler) getProductBySearch(search string) () {
 
 func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
 	barcode := r.URL.Query().Get("barcode")
-	search := r.URL.Query().get("search")
+	search := r.URL.Query().Get("search")
 
 	if barcode != "" {
 		h.getProductByBarcode(w, r, barcode)
@@ -127,20 +127,19 @@ func (h *ProductHandler) GetProduct(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
-	// ToDo: Move out
-	var body struct {
-		Name string `json:"name"`
-	}
-	if err := decodeBody(r, &body); err != nil {
-        writeError(w, http.StatusBadRequest, 
-					"invalid request body", err)
+    var body struct {
+        Name     string  `json:"name"`
+        Category string  `json:"category"`
+        Barcode  string  `json:"barcode"`
+    }
+    if err := decodeBody(r, &body); err != nil {
+        writeError(w, http.StatusBadRequest, "invalid request body", err)
         return
-	}
-	product, err := h.Service.CreateProduct(body.Name)
-	if err != nil {
-        writeError(w, http.StatusInternalServerError, 
-					"failed to create product", err)
+    }
+    product, err := h.Service.CreateProduct(body.Name, body.Category, body.Barcode)
+    if err != nil {
+        writeError(w, http.StatusInternalServerError, "failed to create product", err)
         return
-	}
+    }
     writeJson(w, http.StatusCreated, product)
 }
