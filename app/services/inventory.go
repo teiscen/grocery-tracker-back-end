@@ -36,7 +36,8 @@ func computeExpiry(expiryDate *string) (string, *int) {
 		return "ok", nil
 	}
 	
-	switch days := int(time.Until(t).Hours() / 24) {
+	days := int(time.Until(t).Hours() / 24) 	
+	switch {
 	case days < 0:
 		return "expired", &days
 	case days <=3:
@@ -46,7 +47,7 @@ func computeExpiry(expiryDate *string) (string, *int) {
 	}
 }
 
-const baseInventoryQuery := `
+const baseInventoryQuery = `
 	SELECT
 		i.id,
 		i.quantity,
@@ -112,7 +113,7 @@ func (s *InventoryServices) GetInventoryItem(id int) (*InventoryItem, error) {
 	var item InventoryItem
 	var expiryDate *string
 
-	query := baseInventoryQuery += " Where i.id = $1"
+	query := (baseInventoryQuery += " Where i.id = $1")
 	err := s.DB.QueryRow(query, id).Scan(
 		&item.ID,
 		&item.Quantity, 
@@ -137,13 +138,13 @@ func (s *InventoryServices) GetInventoryItem(id int) (*InventoryItem, error) {
 
 func (s *InventoryServices) CreateInventoryItem(
 	name string, category *string, barcode *string, locationID int,
-	quantity float64, unit string, expiryDate *string, opened bool
+	quantity float64, unit string, expiryDate *string, opened bool,
 ) (*InventoryItem, error) {
 	id, err := s.DB.InsertReturningId(`
 		INSERT INTO inventory (product_id, location_id, quantity, unit, expiry_date,
 		VALUES $1, $2, $3, $4, $5, $6) 
 		RETURNING id`,
-		productID, locationID, quantity, unit, expiryDate, opened
+		productID, locationID, quantity, unit, expiryDate, opened,
 	)
 	if err != nil {
 		return nil, err
