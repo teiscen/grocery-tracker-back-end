@@ -66,11 +66,8 @@ func (s *ProductServices) GetProductByBarcode(barcode string) (*Product, error) 
 		"SELECT id, name, category, barcode FROM products WHERE barcode = $1",
 		barcode,
 	).Scan(&prod.ID, &prod.Name, &prod.Category, &prod.Barcode)
-	if err == sql.ErrNoRows {
-		return nil, nil
-	}
 	if err != nil {
-		return nil, err
+		return nil, nil 
 	} 
 	return &prod, nil
 }

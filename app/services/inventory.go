@@ -65,7 +65,7 @@ const baseInventoryQuery = `
 	JOIN locations l ON i.location_id = l.id`
 
 
-func (s *InventoryServices) GetInventory(LocationID *int) ([]InventoryItem, error) {
+func (s *InventoryServices) GetInventory(locationID *int) ([]InventoryItem, error) {
 	query := baseInventoryQuery 
 
 	// Filter by location if its provided
@@ -137,10 +137,14 @@ func (s *InventoryServices) GetInventoryItem(id int) (*InventoryItem, error) {
 }
 
 func (s *InventoryServices) CreateInventoryItem(
-	name string, category *string, barcode *string, locationID int,
-	quantity float64, unit string, expiryDate *string, opened bool,
+    productID int,
+    locationID int,
+    quantity float64,
+    unit string,
+    expiryDate *string,
+    opened bool,
 ) (*InventoryItem, error) {
-	id, err := s.DB.InsertReturningId(`
+	id, err := s.DB.InsertReturningID(`
 		INSERT INTO inventory (product_id, location_id, quantity, unit, expiry_date,
 		VALUES $1, $2, $3, $4, $5, $6) 
 		RETURNING id`,
