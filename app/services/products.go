@@ -107,5 +107,5 @@ func (s *ProductServices) CreateProduct(name string, category string, barcode st
 	if err != nil { 
 		return nil, err 
 	}
-	return &Product{ID: id, Name: name, Category category, Barcode barcode}, nil
+	return &Product{ID: id, Name: name, Category: category, Barcode: barcode}, nil
 }

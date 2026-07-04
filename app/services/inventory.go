@@ -113,7 +113,7 @@ func (s *InventoryServices) GetInventoryItem(id int) (*InventoryItem, error) {
 	var item InventoryItem
 	var expiryDate *string
 
-	query := (baseInventoryQuery += " Where i.id = $1")
+	query := baseInventoryQuery + " Where i.id = $1"
 	err := s.DB.QueryRow(query, id).Scan(
 		&item.ID,
 		&item.Quantity, 

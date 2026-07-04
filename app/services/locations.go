@@ -14,11 +14,11 @@ type Location struct {
 }
 
 func (s *LocationServices) GetProductsByLocation(id int) ([]Product, error) {
-	rows, err := s.DB.Query('
+	rows, err := s.DB.Query(`
 		SELECT p.id, p.name, p.category, p.barcode 
 		FROM products p
-		WHERE i.location_id = $1',
-		id
+		WHERE i.location_id = $1`,
+		id,
 	)
 	if err != nil {
 		return nil, err 
