@@ -31,7 +31,7 @@ func computeExpiry(expiryDate *string) (string, *int) {
 	if expiryDate == nil {
 		return "ok", nil
 	}
-	t, err = time.Parse(time.DateOnly, *expiryDate)
+	t, err := time.Parse(time.DateOnly, *expiryDate)
 	if err != nil {
 		return "ok", nil
 	}
